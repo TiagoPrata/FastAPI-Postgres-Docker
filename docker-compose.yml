@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: db
+      PGDATA: /tmp
+    ports:
+      - "15432:5432"
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    networks:
+      - postgres-network
+
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 5000:8000
+    depends_on:
+      - postgres
+    command: ["./wait-for-db.sh", "db:5432", "--", "python", "app.py"]
+    networks:
+      - postgres-network
+      
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "prataaa@hotmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "PgAdmin2019!"
+    ports:
+      - "16543:80"
+    depends_on:
+      - postgres
+    networks:
+      - postgres-network
+
+networks: 
+  postgres-network:
+    driver: bridge
